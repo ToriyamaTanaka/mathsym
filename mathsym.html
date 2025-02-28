@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學鍵盤</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        .category {
+            margin-bottom: 10px;
+        }
+        .category h3 {
+            margin: 5px 0;
+        }
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        button {
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="keyboard"></div>
+    <script>
+        function copyText(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+        }
+
+        const symbols = {
+            "希臘字母": ["α", "β", "γ", "δ", "ε", "θ", "λ", "μ", "ρ", "σ", "τ", "ω", "Φ", "Σ", "Δ", "Ω"],
+            "分數": ["½", "⅓", "⅔"],
+            "關係運算符號": ["∈", "→", "⇒", "↑"],
+            "其他數學符號": ["∂", "∇","∮", "∫", "∙", "⊕","∞","×"],
+            "上標與下標": ["₀", "¹", "²", "³", "⁴", "⁻", "⁺"]
+        };
+
+        const keyboard = document.getElementById("keyboard");
+        
+        for (const [category, chars] of Object.entries(symbols)) {
+            const categoryDiv = document.createElement("div");
+            categoryDiv.classList.add("category");
+            
+            const title = document.createElement("h3");
+            title.textContent = category;
+            categoryDiv.appendChild(title);
+            
+            const buttonContainer = document.createElement("div");
+            buttonContainer.classList.add("button-container");
+            
+            chars.forEach(char => {
+                const button = document.createElement("button");
+                button.textContent = char;
+                button.onclick = () => copyText(char);
+                buttonContainer.appendChild(button);
+            });
+            
+            categoryDiv.appendChild(buttonContainer);
+            keyboard.appendChild(categoryDiv);
+        }
+    </script>
+</body>
+</html>
