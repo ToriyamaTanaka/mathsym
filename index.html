@@ -1,80 +1,167 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數學鍵盤</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-            font-family: Arial, sans-serif;
-        }
-        .category {
-            margin-bottom: 10px;
-        }
-        .category h3 {
-            margin: 5px 0;
-        }
-        .button-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        button {
-            padding: 10px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>單音聽寫訓練器</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+      background: #f4f4f4;
+    }
+    h1 {
+      margin-bottom: 1rem;
+    }
+    button {
+      font-size: 1.1rem;
+      margin: 0.3rem;
+      padding: 0.5rem 1rem;
+    }
+    .note-buttons, .stats {
+      margin-top: 1.5rem;
+    }
+    #result {
+      font-size: 1.4rem;
+      margin-top: 1rem;
+      color: #333;
+    }
+    .stats p {
+      font-size: 1.1rem;
+    }
+  </style>
 </head>
 <body>
-    <div id="keyboard"></div>
-    <script>
-        function copyText(text) {
-            const textarea = document.createElement("textarea");
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textarea);
-        }
 
-        const symbols = {
-            "希臘字母": ["α", "β", "γ", "δ", "ε", "θ", "λ", "μ", "ρ", "σ", "τ", "ω", "Φ", "Σ", "Δ", "Ω"],
-            "分數": ["½", "⅓", "⅔"],
-            "關係運算符號": ["∈", "→", "⇒", "↑"],
-            "其他數學符號": ["∂", "∇","∮", "∫", "∙", "⊕","∞","×"],
-            "數集": ["ℕ","ℤ","ℚ","ℝ","ℂ"],
-            "上標與下標": ["₀", "¹", "²", "³", "⁴", "⁻", "⁺"]
-        };
+  <h1>🎵 單音聽寫訓練器（C - B）</h1>
+  <button onclick="playRandomNote()">🎧 播放音符</button>
+  <button onclick="resetStats()">🔄 重置統計</button>
 
-        const keyboard = document.getElementById("keyboard");
-        
-        for (const [category, chars] of Object.entries(symbols)) {
-            const categoryDiv = document.createElement("div");
-            categoryDiv.classList.add("category");
-            
-            const title = document.createElement("h3");
-            title.textContent = category;
-            categoryDiv.appendChild(title);
-            
-            const buttonContainer = document.createElement("div");
-            buttonContainer.classList.add("button-container");
-            
-            chars.forEach(char => {
-                const button = document.createElement("button");
-                button.textContent = char;
-                button.onclick = () => copyText(char);
-                buttonContainer.appendChild(button);
-            });
-            
-            categoryDiv.appendChild(buttonContainer);
-            keyboard.appendChild(categoryDiv);
-        }
-    </script>
+  <div class="note-buttons">
+    <!-- 音符按鈕 -->
+    <button onclick="checkAnswer('C')">C</button>
+    <button onclick="checkAnswer('C#')">C#</button>
+    <button onclick="checkAnswer('D')">D</button>
+    <button onclick="checkAnswer('D#')">D#</button>
+    <button onclick="checkAnswer('E')">E</button>
+    <button onclick="checkAnswer('F')">F</button>
+    <button onclick="checkAnswer('F#')">F#</button>
+    <button onclick="checkAnswer('G')">G</button>
+    <button onclick="checkAnswer('G#')">G#</button>
+    <button onclick="checkAnswer('A')">A</button>
+    <button onclick="checkAnswer('A#')">A#</button>
+    <button onclick="checkAnswer('B')">B</button>
+  </div>
+
+  <p id="result"></p>
+
+  <div class="stats">
+    <p>總測試次數: <span id="totalAttempts">0</span></p>
+    <p>正確次數: <span id="correctCount">0</span></p>
+    <p>正確率: <span id="accuracy">0%</span></p>
+  </div>
+
+  <script>
+    const notes = {
+      'C': 261.63,
+      'C#': 277.18,
+      'D': 293.66,
+      'D#': 311.13,
+      'E': 329.63,
+      'F': 349.23,
+      'F#': 369.99,
+      'G': 392.00,
+      'G#': 415.30,
+      'A': 440.00,
+      'A#': 466.16,
+      'B': 493.88
+    };
+
+    let currentNote = '';
+    let totalAttempts = 0;
+    let correctCount = 0;
+    let playing = false;
+
+    function playTone(freq, duration = 1) {
+      if (playing) return; // 防止重複播放
+      playing = true;
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      gain.gain.value = 0.2; // 🔉 音量可調整 (0~1)
+
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+      osc.onended = () => {
+        playing = false; // 播放結束後允許再次播放
+      };
+    }
+
+
+
+    function playRandomNote() {
+      const keys = Object.keys(notes);
+      const index = Math.floor(Math.random() * keys.length);
+      currentNote = keys[index];
+      playTone(notes[currentNote]);
+      document.getElementById("result").textContent = "";
+    }
+
+    function checkAnswer(userGuess) {
+      if (!currentNote) {
+        playTone(notes[userGuess])
+        document.getElementById("result").textContent = "請先播放一個音符！";
+        return;
+      }
+
+      totalAttempts++;
+
+      if (userGuess === currentNote) {
+        correctCount++;
+        document.getElementById("result").textContent = "✅ 正確！答案是 " + currentNote;
+      } else {
+        document.getElementById("result").textContent = 
+          "❌ 錯誤，正確答案是 " + currentNote + "，你選的是 " + userGuess;
+
+        // 播放猜錯音（用戶猜的）
+        playTone(notes[userGuess]);
+
+        // 延遲再播放正確音
+        setTimeout(() => {
+          playTone(notes[currentNote]);
+        }, 1000);
+      }
+
+      // 更新統計
+      updateStats();
+
+      // 清空當前狀態
+      currentNote = '';
+    }
+
+    function updateStats() {
+      const accuracy = totalAttempts > 0
+        ? ((correctCount / totalAttempts) * 100).toFixed(1) + "%"
+        : "0%";
+
+      document.getElementById("totalAttempts").textContent = totalAttempts;
+      document.getElementById("correctCount").textContent = correctCount;
+      document.getElementById("accuracy").textContent = accuracy;
+    }
+
+    function resetStats() {
+      totalAttempts = 0;
+      correctCount = 0;
+      currentNote = '';
+      document.getElementById("result").textContent = "";
+      updateStats();
+    }
+  </script>
 </body>
 </html>
